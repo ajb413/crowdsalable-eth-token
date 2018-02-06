@@ -1,15 +1,48 @@
 pragma solidity ^0.4.18;
 
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 /**
  * Token
  *
- * @title A fixed supply ERC20 token contract.
+ * @title A fixed supply ERC-20 token contract with crowdsale capability.
  * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
  */
-contract Token {
+contract Token is Ownable {
     using SafeMath for uint;
+    uint public constant MAX_UINT =
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+
+    struct Crowdsale {
+        bool open;
+        uint initialTokenSupply;
+        uint tokenBalance;
+        uint exchangeRate;
+        uint startTime;
+        uint endTime;
+    }
+
+    event CrowdsaleDeployed(
+        string indexed crowdsaleName,
+        bool indexed open,
+        uint initialTokenSupply,
+        uint exchangeRate,
+        uint indexed startTime,
+        uint endTime
+    );
+
+    event TokenNameChanged(
+        string previousName,
+        string indexed newName,
+        uint indexed time
+    );
+
+    event TokenSymbolChanged(
+        string previousSymbol,
+        string indexed newSymbol,
+        uint indexed time
+    );
 
     event Transfer(
         address indexed _from,
@@ -30,6 +63,7 @@ contract Token {
 
     mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowed;
+    mapping(string => Crowdsale) crowdsales;
 
     /**
      * Constructs the Token contract and gives all of the supply to the address
@@ -125,5 +159,287 @@ contract Token {
         returns (uint remaining)
     {
         return allowed[_owner][_spender];
+    }
+
+    /**
+     * Changes the token's name. Does not check for improper characters.
+     * @param newName String of the new name for the token.
+     */
+    function changeTokenName(string newName) public onlyOwner {
+        require(bytes(newName).length > 0);
+        string memory oldName = name;
+        name = newName;
+        TokenNameChanged(oldName, newName, now);
+    }
+
+    /**
+     * Changes the token's symbol. Does not check for improper characters.
+     * @param newSymbol String of the new symbol for the token. 
+     */
+    function changeTokenSymbol(string newSymbol) public onlyOwner {
+        require(bytes(newSymbol).length > 0);
+        string memory oldSymbol = symbol;
+        symbol = newSymbol;
+        TokenSymbolChanged(oldSymbol, newSymbol, now);
+    }
+
+    /**
+     * Creates a crowdsale. Tokens are withdrawn from the owner's account and
+     *     the balance is kept track of by the `tokenBalance` of the crowdsale.
+     *     A crowdsale can be opened or closed at any time by the owner using
+     *     the `openCrowdsale` and `closeCrowdsale` methods. The `open`,
+     *     `startTime`, and `endTime` properties are checked when a purchase is
+     *     attempted. Crowdsales permanently exist in the `crowdsales` map. If
+     *     the `endTime` for a crowdsale in the map is `0` the ncrowdsale does
+     *     not exist.
+     * @param crowdsaleName String name of the crowdsale. Used as the
+     *     map key for a crowdsale struct instance in the `crowdsales` map.
+     *     A name can be used once and only once to initialize a crowdsale.
+     * @param open Boolean of openness; can be changed at any time by the owner.
+     * @param initialTokenSupply Number of tokens the crowdsale is deployed
+     *     with.
+     * @param exchangeRate Token wei to Ethereum wei ratio.
+     * @param startTime Unix epoch time in seconds for crowdsale start time.
+     * @param endTime Unix epoch time in seconds for crowdsale end time. Any
+     *     uint256 can be used to set this however passing `0` will cause the
+     *     value to be set to the maximum uint256. If `0` is not passed, the
+     *     value must be greater than `startTime`.
+     */
+    function createCrowdsale(
+        string crowdsaleName,
+        bool open,
+        uint initialTokenSupply,
+        uint exchangeRate,
+        uint startTime,
+        uint endTime
+    )
+        public
+        onlyOwner
+    {
+        require(
+            initialTokenSupply > 0 && initialTokenSupply <= balances[owner]
+        );
+        require(bytes(crowdsaleName).length > 0);
+        require(crowdsales[crowdsaleName].endTime == 0);
+        require(exchangeRate > 0);
+
+        if (endTime == 0) {
+            endTime = MAX_UINT;
+        }
+
+        require(endTime > startTime);
+
+        crowdsales[crowdsaleName] = Crowdsale({
+            open: open,
+            initialTokenSupply: initialTokenSupply,
+            tokenBalance: initialTokenSupply,
+            exchangeRate: exchangeRate,
+            startTime: startTime,
+            endTime: endTime
+        });
+
+        balances[owner] = balances[owner].sub(initialTokenSupply);
+
+        CrowdsaleDeployed(
+            crowdsaleName,
+            open,
+            initialTokenSupply,
+            exchangeRate,
+            startTime,
+            endTime
+        );
+    }
+
+    /**
+     * Gets all the details for a declared crowdsale. If the passed name is not
+     *     associated with an existing crowdsale, the call errors.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @return Each member of a declared crowdsale struct.
+     */
+    function getCrowdsaleDetails(string crowdsaleName)
+        public
+        view
+        returns
+    (
+        string name_,
+        bool open,
+        uint initialTokenSupply,
+        uint tokenBalance,
+        uint exchangeRate,
+        uint startTime,
+        uint endTime
+    )
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        return (
+            crowdsaleName,
+            crowdsales[crowdsaleName].open,
+            crowdsales[crowdsaleName].initialTokenSupply,
+            crowdsales[crowdsaleName].tokenBalance,
+            crowdsales[crowdsaleName].exchangeRate,
+            crowdsales[crowdsaleName].startTime,
+            crowdsales[crowdsaleName].endTime
+        );
+    }
+
+    /**
+     * Owner can change the crowdsale's `open` property to true at any time.
+     *     Only works on deployed crowdsales.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @return True if the open succeeded, false if not.
+     */
+    function openCrowdsale(string crowdsaleName)
+        public
+        onlyOwner
+        returns (bool success)
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        crowdsales[crowdsaleName].open = true;
+        return true;
+    }
+    
+    /**
+     * Owner can change the crowdsale's `open` property to false at any time.
+     *     Only works on deployed crowdsales.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @return True if the close succeeded, false if not.
+     */
+    function closeCrowdsale(string crowdsaleName)
+        public
+        onlyOwner
+        returns (bool success)
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        crowdsales[crowdsaleName].open = false;
+        return true;
+    }
+
+    /**
+     * Owner can add tokens to the crowdsale after it is deployed. Owner must
+     *     have enough tokens in their balance for this method to succeed.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @param tokens Number of tokens to transfer from the owner to the
+     *     crowdsale's `tokenBalance` property.
+     * @return True if the add succeeded, false if not.
+     */
+    function crowdsaleAddTokens(string crowdsaleName, uint tokens)
+        public
+        onlyOwner
+        returns (bool success)
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        require(balances[owner] >= tokens);
+
+        balances[owner] = balances[owner].sub(tokens);
+        crowdsales[crowdsaleName].tokenBalance = 
+            crowdsales[crowdsaleName].tokenBalance.add(tokens);
+
+        Transfer(owner, address(this), tokens);
+        return true;
+    }
+
+    /**
+     * Owner can remove tokens from the crowdsale at any time. Crowdsale must
+     *      have enough tokens in its balance for this method to succeed.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @param tokens Number of tokens to transfer from the crowdsale
+     *      `tokenBalance` to the owner.
+     * @return True if the remove succeeded, false if not.
+     */
+    function crowdsaleRemoveTokens(string crowdsaleName, uint tokens)
+        public
+        onlyOwner
+        returns (bool success)
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        require(crowdsales[crowdsaleName].tokenBalance >= tokens);
+
+        balances[owner] = balances[owner].add(tokens);
+        crowdsales[crowdsaleName].tokenBalance = 
+            crowdsales[crowdsaleName].tokenBalance.sub(tokens);
+
+        Transfer(address(this), owner, tokens);
+        return true;
+    }
+
+    /**
+     * Owner can change the crowdsale's `exchangeRate` after it is deployed.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @param newExchangeRate Ratio of token wei to Ethereum wei for crowdsale
+     *     purchases.
+     * @return True if the update succeeded, false if not.
+     */
+    function crowdsaleUpdateExchangeRate(
+        string crowdsaleName,
+        uint newExchangeRate
+    )
+        public
+        onlyOwner
+        returns (bool success)
+    {
+        // Only works on crowdsales that exist
+        require(crowdsales[crowdsaleName].endTime > 0);
+        crowdsales[crowdsaleName].exchangeRate = newExchangeRate;
+        return true;
+    }
+
+    /**
+     * Any wallet can purchase tokens using Ether if the crowdsale is open.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     */
+    function crowdsalePurchase(string crowdsaleName) public payable {
+        require(bytes(crowdsaleName).length > 0);
+        require(crowdsaleIsOpen(crowdsaleName));
+
+        uint tokens = crowdsales[crowdsaleName].exchangeRate.mul(msg.value);
+        require(crowdsales[crowdsaleName].tokenBalance >= tokens);
+
+        crowdsales[crowdsaleName].tokenBalance =
+            crowdsales[crowdsaleName].tokenBalance.sub(tokens);
+        balances[msg.sender] = balances[msg.sender].add(tokens);
+
+        Transfer(address(this), msg.sender, tokens);
+    }
+
+    /**
+     * Gets the number of tokens the crowdsale has not yet sold.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @return Total number of tokens the crowdsale has not yet sold.
+     */
+    function crowdsaleTokenBalance(string crowdsaleName)
+        public
+        view
+        returns (uint)
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        return crowdsales[crowdsaleName].tokenBalance;
+    }
+
+    /**
+     * Check if the crowdsale is open.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @return True if the crowdsale is open, false if it is not.
+     */
+    function crowdsaleIsOpen(string crowdsaleName) public view returns (bool) {
+        bool result = true;
+
+        if (
+            !crowdsales[crowdsaleName].open
+            || crowdsales[crowdsaleName].startTime > now
+            || crowdsales[crowdsaleName].endTime < now
+        ) {
+            result = false;
+        }
+
+        return result;
     }
 }
