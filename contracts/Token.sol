@@ -24,7 +24,7 @@ contract Token is Ownable {
     }
 
     event CrowdsaleDeployed(
-        string indexed crowdsaleName,
+        string crowdsaleName,
         bool indexed open,
         uint initialTokenSupply,
         uint exchangeRate,
@@ -34,13 +34,13 @@ contract Token is Ownable {
 
     event TokenNameChanged(
         string previousName,
-        string indexed newName,
+        string newName,
         uint indexed time
     );
 
     event TokenSymbolChanged(
         string previousSymbol,
-        string indexed newSymbol,
+        string newSymbol,
         uint indexed time
     );
 
@@ -251,39 +251,6 @@ contract Token is Ownable {
     }
 
     /**
-     * Gets all the details for a declared crowdsale. If the passed name is not
-     *     associated with an existing crowdsale, the call errors.
-     * @param crowdsaleName String for the name of the crowdsale. Used as the
-     *     map key to find a crowdsale struct instance in the `crowdsales` map.
-     * @return Each member of a declared crowdsale struct.
-     */
-    function getCrowdsaleDetails(string crowdsaleName)
-        public
-        view
-        returns
-    (
-        string name_,
-        bool open,
-        uint initialTokenSupply,
-        uint tokenBalance,
-        uint exchangeRate,
-        uint startTime,
-        uint endTime
-    )
-    {
-        require(crowdsales[crowdsaleName].endTime > 0);
-        return (
-            crowdsaleName,
-            crowdsales[crowdsaleName].open,
-            crowdsales[crowdsaleName].initialTokenSupply,
-            crowdsales[crowdsaleName].tokenBalance,
-            crowdsales[crowdsaleName].exchangeRate,
-            crowdsales[crowdsaleName].startTime,
-            crowdsales[crowdsaleName].endTime
-        );
-    }
-
-    /**
      * Owner can change the crowdsale's `open` property to true at any time.
      *     Only works on deployed crowdsales.
      * @param crowdsaleName String for the name of the crowdsale. Used as the
@@ -390,12 +357,13 @@ contract Token is Ownable {
     }
 
     /**
-     * Any wallet can purchase tokens using Ether if the crowdsale is open.
+     * Any wallet can purchase tokens using ether if the crowdsale is open. Note
+     *     that the math operations assume the operands are Ethereum wei and
+     *     Token wei.
      * @param crowdsaleName String for the name of the crowdsale. Used as the
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
      */
     function crowdsalePurchase(string crowdsaleName) public payable {
-        require(bytes(crowdsaleName).length > 0);
         require(crowdsaleIsOpen(crowdsaleName));
 
         uint tokens = crowdsales[crowdsaleName].exchangeRate.mul(msg.value);
@@ -406,6 +374,39 @@ contract Token is Ownable {
         balances[msg.sender] = balances[msg.sender].add(tokens);
 
         Transfer(address(this), msg.sender, tokens);
+    }
+
+    /**
+     * Gets all the details for a declared crowdsale. If the passed name is not
+     *     associated with an existing crowdsale, the call errors.
+     * @param crowdsaleName String for the name of the crowdsale. Used as the
+     *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @return Each member of a declared crowdsale struct.
+     */
+    function getCrowdsaleDetails(string crowdsaleName)
+        public
+        view
+        returns
+    (
+        string name_,
+        bool open,
+        uint initialTokenSupply,
+        uint tokenBalance,
+        uint exchangeRate,
+        uint startTime,
+        uint endTime
+    )
+    {
+        require(crowdsales[crowdsaleName].endTime > 0);
+        return (
+            crowdsaleName,
+            crowdsales[crowdsaleName].open,
+            crowdsales[crowdsaleName].initialTokenSupply,
+            crowdsales[crowdsaleName].tokenBalance,
+            crowdsales[crowdsaleName].exchangeRate,
+            crowdsales[crowdsaleName].startTime,
+            crowdsales[crowdsaleName].endTime
+        );
     }
 
     /**
