@@ -106,4 +106,4 @@ To deploy to Ropsten we can use the following command. Keep in mind that deployi
 ```
 truffle migrate --network ropsten
 ```
-You can easily write a connection to the main network in your config using the Ropsten example.
+You can easily write a connection to the main network in your config using the Ropsten example and the [Truffle docs](http://truffleframework.com/docs/advanced/configuration).
