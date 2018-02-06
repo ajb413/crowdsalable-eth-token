@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Token UI</title>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
+  </head>
+  <body>
+
+    <div class="container">
+
+      <div class="row">
+        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
+          <h1 class="text-center">Token</h1>
+          <hr/>
+          <br/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
+          <p>This page uses the Truffle development RPC at http://127.0.0.1:9545/. Run 'truffle develop' from the project directory and 'npm run dev' from another command line to use this app.</p>
+          <p>
+            Test wallets, first is the contract owner:
+            <ul>
+              <li>0x627306090abab3a6e1400e9345bc60c78a8bef57</li>
+              <li>0xf17f52151ebef6c7334fad080c5704d77216b732</li>
+              <li>0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef</li>
+              <li>0x821aea9a577a9b44299b9c15c88cf3087f3b5544</li>
+              <li>0x0d1d4e623d10f9fba5db95830f7d3839406c6af2</li>
+              <li>0x2932b7a2355d6fecc4b5c0b6bd44cc31df247a2e</li>
+              <li>0x2191ef87e392377ec08e7c08eb105ef5448eced5</li>
+              <li>0x0f4f2ac550a1b4e2280d04c21cea7ebd822934b5</li>
+              <li>0x6330a553fc93768f612722bb8c2ec78ac90b3bbc</li>
+              <li>0x5aeda56215b167893e80b4fe645ba6d5bab767de</li>
+            </ul>
+          </p>
+          <hr/>
+          <br/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">See Wallet Balance</h3>
+            </div>
+            <div class="panel-body">
+              <input type="text" class="form-control textinput" id="walletAddress" placeholder="Wallet Address" />
+              <h4>Balance</h4>
+              <span id="Balance">?</span> TOK <br/>
+              <button class="btn btn-primary" id="balanceButton" type="button">Get Balance</button>
+            </div>
+          </div>
+          <hr/>
+          <br/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Transfer TOK</h3>
+            </div>
+            <div class="panel-body">
+              <p>Anyone can trigger a transfer from any wallet on the test network.</p>
+              <input type="text" class="form-control textinput" id="transferFromAddress" placeholder="From Address" />
+              <input type="text" class="form-control textinput" id="transferToAddress" placeholder="To Address" />
+              <input type="text" class="form-control textinput" id="transferAmount" placeholder="Amount" />
+              <button class="btn btn-primary" id="transferButton" type="button">Transfer</button>
+              <span id="statusSpan"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style type="text/css">
+        input {
+          margin-bottom: 10px;
+        }
+      </style>
+
+    </div>
+
+    <script type="text/javascript" src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/ethereumjs/browser-builds/b15ffc9a/dist/ethereumjs-tx/ethereumjs-tx-1.3.3.min.js"></script>
+    <script src="./app.js"></script>
+
+  </body>
+</html>
