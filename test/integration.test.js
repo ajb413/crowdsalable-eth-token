@@ -3,7 +3,7 @@ const privateKeys = require('./truffle-keys').private;
 const publicKeys = require('./truffle-keys').public;
 const Token = artifacts.require('./Token.sol');
 
-contract('Token (integration)', function(accounts) {
+contract('Token', function(accounts) {
   let contract;
   let owner;
   let web3Contract;
@@ -12,7 +12,7 @@ contract('Token (integration)', function(accounts) {
     contract = await Token.deployed();
     web3Contract = web3.eth.contract(contract.abi).at(contract.address);
     owner = web3Contract._eth.coinbase;
-    let other = web3.eth.accounts[1];
+    let other = publicKeys[1];
 
     if (publicKeys[0] !== owner || publicKeys[1] !== other) {
       throw new Error('Use `truffle develop` and /test/truffle-keys.js');
@@ -32,7 +32,7 @@ contract('Token (integration)', function(accounts) {
   });
 
   it('should properly [transfer] token', async function() {
-    let recipient = web3.eth.accounts[1];
+    let recipient = publicKeys[1];
     let tokenWei = 1000000;
 
     await contract.transfer(recipient, tokenWei);
@@ -44,6 +44,63 @@ contract('Token (integration)', function(accounts) {
     assert.strictEqual(recipientBalance.toNumber(), tokenWei);
   });
 
+  it('should properly between non-owners [transfer] token', async function() {
+    let sender = publicKeys[1];
+    let senderPrivateKey = privateKeys[1];
+    let recipient = publicKeys[2];
+    let tokenWei = 500000;
+    
+    let data = web3Contract.transfer.getData(recipient, tokenWei);
+
+    let result = await rawTransaction(
+      sender,
+      senderPrivateKey,
+      contract.address,
+      data,
+      0
+    );
+
+    let senderBalance = await contract.balanceOf.call(sender);
+    let recipientBalance = await contract.balanceOf.call(recipient);
+
+    assert.strictEqual(senderBalance.toNumber(), tokenWei);
+    assert.strictEqual(recipientBalance.toNumber(), tokenWei);
+    assert.strictEqual(0, result.indexOf('0x'));
+  });
+
+  it('should fail to [transfer] token too much token', async function() {
+    let sender = publicKeys[1];
+    let senderPrivateKey = privateKeys[1];
+    let recipient = publicKeys[2];
+    let tokenWei = 50000000;
+    
+    let data = web3Contract.transfer.getData(recipient, tokenWei);
+
+    let errorMessage;
+    try {
+      await rawTransaction(
+        sender,
+        senderPrivateKey,
+        contract.address,
+        data,
+        0
+      );
+    } catch (error) {
+      errorMessage = error.message;
+    }
+
+    assert.strictEqual(
+      errorMessage,
+      'VM Exception while processing transaction: invalid opcode'
+    );
+
+    let senderBalance = await contract.balanceOf.call(sender);
+    let recipientBalance = await contract.balanceOf.call(recipient);
+
+    assert.strictEqual(senderBalance.toNumber(), 500000);
+    assert.strictEqual(recipientBalance.toNumber(), 500000);
+  });
+
   it('should properly return the [totalSupply] of tokens', async function() {
     let totalSupply = await contract.totalSupply.call();
     totalSupply = totalSupply.toString();
@@ -52,7 +109,7 @@ contract('Token (integration)', function(accounts) {
 
   it('should [approve] token for [transferFrom]', async function() {
     let approver = owner;
-    let spender = web3.eth.accounts[2];
+    let spender = publicKeys[2];
 
     let originalAllowance = await contract.allowance.call(approver, spender);
 
@@ -67,7 +124,7 @@ contract('Token (integration)', function(accounts) {
 
   it('should fail to [transferFrom] more than allowed', async function() {
     let from = owner;
-    let to = web3.eth.accounts[2];
+    let to = publicKeys[2];
     let spenderPrivateKey = privateKeys[2];
     let tokenWei = 10000000;
 
@@ -98,7 +155,7 @@ contract('Token (integration)', function(accounts) {
 
   it('should [transferFrom] approved tokens', async function() {
     let from = owner;
-    let to = web3.eth.accounts[2];
+    let to = publicKeys[2];
     let spenderPrivateKey = privateKeys[2];
     let tokenWei = 5000000;
 
@@ -138,6 +195,126 @@ contract('Token (integration)', function(accounts) {
     assert.strictEqual(allowanceAfter.toNumber(), 0);
 
     // Normal transaction hash, not an error.
+    assert.strictEqual(0, result.indexOf('0x'));
+  });
+
+  it('should fail [changeTokenName] for not the owner', async function() {
+      let notOwner = publicKeys[2];
+      let notOwnerPrivateKey = privateKeys[2];
+
+      let data = web3Contract.changeTokenName.getData('NewName');
+
+      let errorMessage;
+      try {
+        await rawTransaction(
+          notOwner,
+          notOwnerPrivateKey,
+          contract.address,
+          data,
+          0
+        );
+      } catch (error) {
+        errorMessage = error.message;
+      }
+
+      let expected = 'VM Exception while processing transaction: revert';
+      assert.strictEqual(errorMessage, expected);
+  });
+
+  it('should properly [changeTokenName] by the owner', async function() {
+    let ownerPrivateKey = privateKeys[0];
+    let oldName = await contract.name.call();
+
+    // attempt to `changeTokenName` 
+    let data = web3Contract.changeTokenName.getData('NewName');
+
+    let result = await rawTransaction(
+      owner,
+      ownerPrivateKey,
+      contract.address,
+      data,
+      0
+    );
+
+    let newName = await contract.name.call();
+
+    assert.strictEqual(oldName, 'Token');
+    assert.strictEqual(newName, 'NewName');
+    assert.strictEqual(0, result.indexOf('0x'));
+  });
+
+  it('should fail [changeTokenSymbol] for not the owner', async function() {
+    let notOwner = publicKeys[3];
+    let notOwnerPrivateKey = privateKeys[3];
+
+    let data = web3Contract.changeTokenSymbol.getData('XYZ');
+
+    let errorMessage;
+    try {
+      await rawTransaction(
+        notOwner,
+        notOwnerPrivateKey,
+        contract.address,
+        data,
+        0
+      );
+    } catch (error) {
+      errorMessage = error.message;
+    }
+
+    let expected = 'VM Exception while processing transaction: revert';
+    assert.strictEqual(errorMessage, expected);
+  });
+
+  it('should properly [changeTokenSymbol] by the owner', async function() {
+    let ownerPrivateKey = privateKeys[0];
+    let oldSymbol = await contract.symbol.call();
+
+    // attempt to `changeTokenName` 
+    let data = web3Contract.changeTokenSymbol.getData('ABC');
+
+    let result = await rawTransaction(
+      owner,
+      ownerPrivateKey,
+      contract.address,
+      data,
+      0
+    );
+
+    let newSymbol = await contract.symbol.call();
+
+    assert.strictEqual(oldSymbol, 'TOK');
+    assert.strictEqual(newSymbol, 'ABC');
+    assert.strictEqual(0, result.indexOf('0x'));
+  });
+
+  it('should properly [createCrowdsale] for owner', async function() {
+    let ownerPrivateKey = privateKeys[0];
+
+    let open = await contract.crowdsaleIsOpen.call('crowdsale1');
+
+    // attempt to `createCrowdsale` that is closed but happening now
+    let data = web3Contract.createCrowdsale.getData(
+      'crowdsale1', /* name */
+      true, /* open */
+      50000, /* initialTokenSupply */
+      400, /* exchangeRate */
+      Math.floor(new Date().getTime() / 1000 - 5), /* startTime */
+      Math.floor(new Date().getTime() / 1000 + 1000), /* endTime */
+    );
+
+    let result = await rawTransaction(
+      owner,
+      ownerPrivateKey,
+      contract.address,
+      data,
+      0
+    );
+
+    let openAfter = await contract.crowdsaleIsOpen.call('crowdsale1');
+
+    assert.strictEqual(open, false);
+    assert.strictEqual(openAfter, true);
     assert.strictEqual(0, result.indexOf('0x'));
   });
 
