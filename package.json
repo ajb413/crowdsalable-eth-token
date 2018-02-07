@@ -2,6 +2,7 @@
   "name": "crowdsalable-eth-token",
   "version": "0.0.0",
   "description": "Crowdsalable Ethereum token",
+  "license": "MIT",
   "scripts": {
     "lint": "eslint ./",
     "build": "webpack",
