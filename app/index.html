@@ -1,30 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Token UI</title>
-    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Ethereum Token</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/css/narrow-jumbotron.css" rel="stylesheet">
   </head>
+
+  <style type="text/css">
+    input {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .inline-table {
+      display: inline-table;
+    }
+
+    .crowdsale-name {
+      width: 40%;
+      margin: 15px auto;
+      text-align: center;
+    }
+  </style>
+
   <body>
 
     <div class="container">
 
-      <div class="row">
-        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
-          <h1 class="text-center">Token</h1>
-          <hr/>
-          <br/>
-        </div>
+      <div class="jumbotron">
+        <h1 class="display-3">Token Crowdsale</h1>
+        <p class="lead">Launch a crowdsale. Inform your crowd in realtime with PubNub.</p>
+        <input type="text" class="form-control textinput crowdsale-name" id="crowdsaleName" placeholder="Crowdsale Name" />
+        <p><a class="btn btn-lg btn-success" href="#" role="button">Launch</a></p>
+        <span>The Crowdsale "test" is now live.<br />Your users have been text messaged.</span>
       </div>
 
-      <div class="row">
-        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
-          <p>This page uses the Truffle development RPC at http://127.0.0.1:9545/. Run 'truffle develop' from the project directory and 'npm run dev' from another command line to use this app.</p>
-          <p>
-            Test wallets, first is the contract owner:
-            <ul>
+      <div class="row marketing">
+
+        <div class="col-lg-12">
+          <div>
+            <h3 class="center">Buy From Crowdsale</h3>
+          </div>
+          <div>
+            <input type="text" class="form-control textinput" id="buyerAddress" placeholder="Buyer Address" />
+            <input type="text" class="form-control textinput" id="beneficiaryAddress" placeholder="Beneficiary Address" />
+            <input type="text" class="form-control textinput" id="buyAmount" placeholder="Amount" />
+            <button class="btn btn-primary" id="transferButton" type="button">Transfer</button>
+            <span id="statusSpan"></span>
+
+            <hr/>
+            <br/>
+
+          </div>
+        </div>
+        
+        <div class="col-lg-12">
+          <div>
+            <h3 class="center">Transfer TOK</h3>
+          </div>
+          <div>
+            <p class="center">Anyone can trigger a transfer from any wallet on the test network.</p>
+            <input type="text" class="form-control textinput" id="transferFromAddress" placeholder="From Address" />
+            <input type="text" class="form-control textinput" id="transferToAddress" placeholder="To Address" />
+            <input type="text" class="form-control textinput" id="transferAmount" placeholder="Amount" />
+            <button class="btn btn-primary" id="transferButton" type="button">Transfer</button>
+            <span id="statusSpan"></span>
+
+            <hr/>
+            <br/>
+
+          </div>
+        </div>
+
+        <div class="col-lg-12">
+          <div>
+            <h3 class="center">See Wallet Balance</h3>
+          </div>
+          <div>
+            <input type="text" class="form-control textinput" id="walletAddress" placeholder="Wallet Address" />
+              <h4>Balance</h4>
+              <span id="Balance">?</span> TOK <br/>
+              <button class="btn btn-primary" id="balanceButton" type="button">Get Balance</button>
+
+            <hr/>
+            <br/>
+
+          </div>
+        </div>
+
+        <div class="col-lg-12">
+          <div>
+            <h3 class="center">Truffle Development Wallets</h3>
+          </div>
+          <div class="center">
+            <h5>Number 1 is the contract owner</h5>
+            <ol class="inline-table">
               <li>0x627306090abab3a6e1400e9345bc60c78a8bef57</li>
               <li>0xf17f52151ebef6c7334fad080c5704d77216b732</li>
               <li>0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef</li>
@@ -35,60 +116,17 @@
               <li>0x0f4f2ac550a1b4e2280d04c21cea7ebd822934b5</li>
               <li>0x6330a553fc93768f612722bb8c2ec78ac90b3bbc</li>
               <li>0x5aeda56215b167893e80b4fe645ba6d5bab767de</li>
-            </ul>
-          </p>
-          <hr/>
-          <br/>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">See Wallet Balance</h3>
-            </div>
-            <div class="panel-body">
-              <input type="text" class="form-control textinput" id="walletAddress" placeholder="Wallet Address" />
-              <h4>Balance</h4>
-              <span id="Balance">?</span> TOK <br/>
-              <button class="btn btn-primary" id="balanceButton" type="button">Get Balance</button>
-            </div>
-          </div>
-          <hr/>
-          <br/>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-sm-6 col-sm-push-3 col-md-4 col-md-push-4">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">Transfer TOK</h3>
-            </div>
-            <div class="panel-body">
-              <p>Anyone can trigger a transfer from any wallet on the test network.</p>
-              <input type="text" class="form-control textinput" id="transferFromAddress" placeholder="From Address" />
-              <input type="text" class="form-control textinput" id="transferToAddress" placeholder="To Address" />
-              <input type="text" class="form-control textinput" id="transferAmount" placeholder="Amount" />
-              <button class="btn btn-primary" id="transferButton" type="button">Transfer</button>
-              <span id="statusSpan"></span>
-            </div>
+            </ol>
           </div>
         </div>
+
       </div>
-
-      <style type="text/css">
-        input {
-          margin-bottom: 10px;
-        }
-      </style>
-
     </div>
 
     <script type="text/javascript" src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
     <script type="text/javascript" src="https://cdn.rawgit.com/ethereumjs/browser-builds/b15ffc9a/dist/ethereumjs-tx/ethereumjs-tx-1.3.3.min.js"></script>
-    <script src="./app.js"></script>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.20.1.js"></script>
+    <script src="/app.js"></script>
 
   </body>
 </html>

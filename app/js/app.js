@@ -1,4 +1,9 @@
-import token_artifacts from '../../build/contracts/Token.json'
+import token_artifacts from '../../build/contracts/Token.json';
+
+var pubnub = new PubNub({
+  publishKey : '__YOUR_PUBNUB_PUBLISH_KEY__',
+  subscribeKey : '__YOUR_PUBNUB_SUBSCRIBE_KEY__'
+});
 
 var accounts;
 var owner;
@@ -70,6 +75,20 @@ window.App = {
         } else {
           window.App.setStatus("Transaction complete!");
         }
+    });
+  },
+
+  newCrowdsale: function(name, address) {
+    var publishConfig = {
+      channel : "new-tok-crowdsale",
+      message : {
+        "crowdsaleName": name,
+        "contractAddress": address
+      }
+    }
+
+    pubnub.publish(publishConfig, function(status, response) {
+      console.log(status, response);
     });
   }
 };
