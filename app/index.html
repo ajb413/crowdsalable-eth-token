@@ -14,9 +14,20 @@
   </head>
 
   <style type="text/css">
+    @media (min-width: 576px) {
+      .jumbotron {
+          padding: 4rem 2rem 2rem 2rem;
+      }
+    }
+
     input {
-      margin-top: 10px;
-      margin-bottom: 10px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+
+    .jumbotron a.btn-success,
+    .jumbotron a.btn-success:hover{
+        color: #fff;
     }
 
     .center {
@@ -29,7 +40,7 @@
 
     .crowdsale-name {
       width: 40%;
-      margin: 15px auto;
+      margin: 30px auto;
       text-align: center;
     }
   </style>
@@ -42,8 +53,10 @@
         <h1 class="display-3">Token Crowdsale</h1>
         <p class="lead">Launch a crowdsale. Inform your crowd in realtime with PubNub.</p>
         <input type="text" class="form-control textinput crowdsale-name" id="crowdsaleName" placeholder="Crowdsale Name" />
-        <p><a class="btn btn-lg btn-success" href="#" role="button">Launch</a></p>
-        <span>The Crowdsale "test" is now live.<br />Your users have been text messaged.</span>
+        <p><a id="launchButton" class="btn btn-lg btn-success" role="button">Launch</a></p>
+        <span id="crowdsaleStatus"></span>
+        <br />
+        <span id="smsStatus"></span>
       </div>
 
       <div class="row marketing">
@@ -53,11 +66,11 @@
             <h3 class="center">Buy From Crowdsale</h3>
           </div>
           <div>
-            <input type="text" class="form-control textinput" id="buyerAddress" placeholder="Buyer Address" />
+            <input type="text" class="form-control textinput" id="buyCrowdsaleName" placeholder="Crowdsale Name" />
             <input type="text" class="form-control textinput" id="beneficiaryAddress" placeholder="Beneficiary Address" />
-            <input type="text" class="form-control textinput" id="buyAmount" placeholder="Amount" />
-            <button class="btn btn-primary" id="transferButton" type="button">Transfer</button>
-            <span id="statusSpan"></span>
+            <input type="text" class="form-control textinput" id="buyAmount" placeholder="Amount in ETH" />
+            <button class="btn btn-primary" id="buyButton" type="button">Transfer</button>
+            <span id="buyStatus"></span>
 
             <hr/>
             <br/>
@@ -73,9 +86,9 @@
             <p class="center">Anyone can trigger a transfer from any wallet on the test network.</p>
             <input type="text" class="form-control textinput" id="transferFromAddress" placeholder="From Address" />
             <input type="text" class="form-control textinput" id="transferToAddress" placeholder="To Address" />
-            <input type="text" class="form-control textinput" id="transferAmount" placeholder="Amount" />
+            <input type="text" class="form-control textinput" id="transferAmount" placeholder="Amount in TOK" />
             <button class="btn btn-primary" id="transferButton" type="button">Transfer</button>
-            <span id="statusSpan"></span>
+            <span id="transferStatus"></span>
 
             <hr/>
             <br/>
