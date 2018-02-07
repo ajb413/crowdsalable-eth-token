@@ -971,7 +971,7 @@ contract('Token', function(accounts) {
     let csTokenBalance = csDetails[3];
     let value = 500000;
 
-    let data = web3Contract.crowdsalePurchase.getData('crowdsale1');
+    let data = web3Contract.crowdsalePurchase.getData('crowdsale1', owner);
 
     let errorMessage;
     try {
@@ -1011,7 +1011,10 @@ contract('Token', function(accounts) {
     let csTokenBalance = csDetails[3];
     let value = 5;
 
-    let data = web3Contract.crowdsalePurchase.getData('notacrowdsalename');
+    let data = web3Contract.crowdsalePurchase.getData(
+      'notacrowdsalename',
+      owner
+    );
 
     let errorMessage;
     try {
@@ -1051,7 +1054,7 @@ contract('Token', function(accounts) {
     let csTokenBalance = csDetails[3];
     let value = 5;
 
-    let data = web3Contract.crowdsalePurchase.getData('');
+    let data = web3Contract.crowdsalePurchase.getData('', owner);
 
     let errorMessage;
     try {
@@ -1091,7 +1094,7 @@ contract('Token', function(accounts) {
     let csTokenBalance = csDetails[3];
     let value = 5;
 
-    let data = web3Contract.crowdsalePurchase.getData('crowdsale1');
+    let data = web3Contract.crowdsalePurchase.getData('crowdsale1', owner);
 
     let result = await rawTransaction(
       owner,
@@ -1118,16 +1121,21 @@ contract('Token', function(accounts) {
   });
 
   it('should properly [crowdsalePurchase] for non-owner', async function() {
-    let notOwner = publicKeys[0];
-    let notOwnerPrivateKey = privateKeys[0];
+    let beneficiary = publicKeys[3];
+    let notOwner = publicKeys[1];
+    let notOwnerPrivateKey = privateKeys[1];
 
+    let beneficiaryBalance = await contract.balanceOf.call(beneficiary);
     let notOwnerBalance = await contract.balanceOf.call(notOwner);
     let csDetails = await contract.getCrowdsaleDetails.call('crowdsale1');
     let exchangeRate = csDetails[4].toNumber();
     let csTokenBalance = csDetails[3];
     let value = 5;
 
-    let data = web3Contract.crowdsalePurchase.getData('crowdsale1');
+    let data = web3Contract.crowdsalePurchase.getData(
+      'crowdsale1', 
+      beneficiary
+    );
 
     let result = await rawTransaction(
       notOwner,
@@ -1137,17 +1145,21 @@ contract('Token', function(accounts) {
       value
     );
 
+    let beneficiaryBalanceAfter = await contract.balanceOf.call(beneficiary);
     let notOwnerBalanceAfter = await contract.balanceOf.call(notOwner);
     let csTokenBalanceAfter =
       await contract.crowdsaleTokenBalance.call('crowdsale1');
 
     notOwnerBalance = notOwnerBalance.toString();
     notOwnerBalanceAfter = notOwnerBalanceAfter.toString();
+    beneficiaryBalance = beneficiaryBalance.toString();
+    beneficiaryBalanceAfter = beneficiaryBalanceAfter.toString();
     csTokenBalance = csTokenBalance.toString();
     csTokenBalanceAfter = csTokenBalanceAfter.toString();
 
-    assert.strictEqual(notOwnerBalance, '9.999999999999999999939025e+26');
-    assert.strictEqual(notOwnerBalanceAfter, '9.99999999999999999993905e+26');
+    assert.strictEqual(notOwnerBalance, notOwnerBalanceAfter);
+    assert.strictEqual(beneficiaryBalance, '0');
+    assert.strictEqual(beneficiaryBalanceAfter, '2500');
     assert.strictEqual(csTokenBalance, '47500');
     assert.strictEqual(csTokenBalanceAfter, '45000');
     assert.strictEqual(0, result.indexOf('0x'));
