@@ -197,7 +197,7 @@ contract Token is Ownable {
      *     A name can be used once and only once to initialize a crowdsale.
      * @param open Boolean of openness; can be changed at any time by the owner.
      * @param initialTokenSupply Number of tokens the crowdsale is deployed
-     *     with.
+     *     with. This amount is a wei integer.
      * @param exchangeRate Token wei to Ethereum wei ratio.
      * @param startTime Unix epoch time in seconds for crowdsale start time.
      * @param endTime Unix epoch time in seconds for crowdsale end time. Any
