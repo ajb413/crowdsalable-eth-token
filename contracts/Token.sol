@@ -101,7 +101,7 @@ contract Token is Ownable {
      * Transfers tokens from the sender's wallet to the specified `_to` wallet.
      * @param _to Address of the transfer's recipient.
      * @param _value Number of tokens to transfer.
-     * @return True if the transfer succeeded, false if not.
+     * @return True if the transfer succeeded.
      */
     function transfer(address _to, uint _value) public returns (bool success) {
         balances[msg.sender] = balances[msg.sender].sub(_value);
@@ -118,7 +118,7 @@ contract Token is Ownable {
      * @param _from Wallet address that tokens are withdrawn from.
      * @param _to Wallet address that tokens are deposited to.
      * @param _value Number of tokens transacted.
-     * @return True if the transfer succeeded, false if not.
+     * @return True if the transfer succeeded.
      */
     function transferFrom(address _from, address _to, uint _value)
         public
@@ -135,7 +135,7 @@ contract Token is Ownable {
      * Sender allows another wallet to `transferFrom` tokens from their wallet.
      * @param _spender Address of `transferFrom` recipient.
      * @param _value Number of tokens to `transferFrom`.
-     * @return True if the approval succeeded, false if not.
+     * @return True if the approval succeeded.
      */
     function approve(address _spender, uint _value)
         public
@@ -255,7 +255,7 @@ contract Token is Ownable {
      *     Only works on deployed crowdsales.
      * @param crowdsaleName String for the name of the crowdsale. Used as the
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
-     * @return True if the open succeeded, false if not.
+     * @return True if the open succeeded.
      */
     function openCrowdsale(string crowdsaleName)
         public
@@ -272,7 +272,7 @@ contract Token is Ownable {
      *     Only works on deployed crowdsales.
      * @param crowdsaleName String for the name of the crowdsale. Used as the
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
-     * @return True if the close succeeded, false if not.
+     * @return True if the close succeeded.
      */
     function closeCrowdsale(string crowdsaleName)
         public
@@ -291,7 +291,7 @@ contract Token is Ownable {
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
      * @param tokens Number of tokens to transfer from the owner to the
      *     crowdsale's `tokenBalance` property.
-     * @return True if the add succeeded, false if not.
+     * @return True if the add succeeded.
      */
     function crowdsaleAddTokens(string crowdsaleName, uint tokens)
         public
@@ -316,7 +316,7 @@ contract Token is Ownable {
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
      * @param tokens Number of tokens to transfer from the crowdsale
      *      `tokenBalance` to the owner.
-     * @return True if the remove succeeded, false if not.
+     * @return True if the remove succeeded.
      */
     function crowdsaleRemoveTokens(string crowdsaleName, uint tokens)
         public
@@ -340,7 +340,7 @@ contract Token is Ownable {
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
      * @param newExchangeRate Ratio of token wei to Ethereum wei for crowdsale
      *     purchases.
-     * @return True if the update succeeded, false if not.
+     * @return True if the update succeeded.
      */
     function crowdsaleUpdateExchangeRate(
         string crowdsaleName,
@@ -362,8 +362,18 @@ contract Token is Ownable {
      *     Token wei.
      * @param crowdsaleName String for the name of the crowdsale. Used as the
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
+     * @param beneficiary Address of the wallet that will receive the tokens from
+     *     the purchase. This can be any wallet address.
+     * @return True if the purchase succeeded.
      */
-    function crowdsalePurchase(string crowdsaleName) public payable {
+    function crowdsalePurchase(
+        string crowdsaleName,
+        address beneficiary
+    )
+        public
+        payable
+        returns (bool success)
+    {
         require(crowdsaleIsOpen(crowdsaleName));
 
         uint tokens = crowdsales[crowdsaleName].exchangeRate.mul(msg.value);
@@ -371,9 +381,10 @@ contract Token is Ownable {
 
         crowdsales[crowdsaleName].tokenBalance =
             crowdsales[crowdsaleName].tokenBalance.sub(tokens);
-        balances[msg.sender] = balances[msg.sender].add(tokens);
+        balances[beneficiary] = balances[beneficiary].add(tokens);
 
-        Transfer(address(this), msg.sender, tokens);
+        Transfer(address(this), beneficiary, tokens);
+        return true;
     }
 
     /**
@@ -428,7 +439,7 @@ contract Token is Ownable {
      * Check if the crowdsale is open.
      * @param crowdsaleName String for the name of the crowdsale. Used as the
      *     map key to find a crowdsale struct instance in the `crowdsales` map.
-     * @return True if the crowdsale is open, false if it is not.
+     * @return True if the crowdsale is open, false if it is closed.
      */
     function crowdsaleIsOpen(string crowdsaleName) public view returns (bool) {
         bool result = true;
