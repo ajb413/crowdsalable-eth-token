@@ -7,6 +7,7 @@ var pubnub = new PubNub({
 
 var pubnubSMSChannel = '__YOUR_FUNCTION_LISTENING_CHANNEL__';
 
+var web3;
 var accounts;
 var owner;
 var contract;
