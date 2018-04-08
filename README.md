@@ -2,6 +2,10 @@
 
 Launch an ERC-20 Ethereum token with crowdsale capability using the Truffle development kit.
 
+Step-by-step tutorial for building this is available on the PubNub Blog, click here:
+
+[![pubnub blog](https://i.imgur.com/VHbsEnd.png)](https://www.pubnub.com/blog/how-to-launch-your-own-crowdsalable-cryptocurrency-part-3/?devrel_gh=erc20-ethereum-token)
+
 Based on:
 - [ERC-20](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md)
 - [Truffle](http://truffleframework.com/docs/)
